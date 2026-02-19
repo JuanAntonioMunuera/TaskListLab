@@ -1,0 +1,20 @@
+<h1>Agregar Nueva Tarea</h1>
+
+<p>
+  Título:
+  <input type="text" [(ngModel)]="nuevaTarea.title">
+</p>
+
+<p>
+  Usuario ID:
+  <input type="number" [(ngModel)]="nuevaTarea.userId" name="userId">
+  {{ userService.getNombreUsuario(nuevaTarea.userId) }}
+</p>
+
+<p>
+  Completada:
+  <input type="checkbox" [(ngModel)]="nuevaTarea.completed">
+</p>
+
+<button (click)="guardar()">Guardar</button>
+<button routerLink="/tasks">Cancelar</button>

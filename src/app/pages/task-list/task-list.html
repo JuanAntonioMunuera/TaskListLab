@@ -1,0 +1,48 @@
+<h1>Lista de Tareas</h1>
+
+<p>
+  Filtrar por categoría:
+  <select [(ngModel)]="filtro">
+    <option value="todas">Todas</option>
+    <option value="completadas">Completadas</option>
+    <option value="pendientes">Pendientes</option>
+  </select>
+</p>
+
+@if (hayTareas()) {
+  <table [border]="1">
+    <tr>
+      <th>Título</th>
+      <th>Usuario</th>
+      <th>Completada</th>
+      <th>Borrar</th>
+      <th>Detalle</th>
+    </tr>
+
+    @for (tarea of tareasFiltradas(); track tarea.id; let i = $index) {
+      <tr>
+        <td>{{ tarea.title | uppercase }}</td>
+
+        <td>
+          <span [mark-user]="getUsuarioNombre(tarea.userId)">
+            {{ getUsuarioNombre(tarea.userId) }}
+          </span>
+        </td>
+
+        <td>{{ tarea.completed | taskStatus }}</td>
+
+        <td>
+          <button (click)="borrar(i)">Borrar</button>
+        </td>
+
+        <td>
+          <button [routerLink]="['/tasks', tarea.id]" [state]="{ tarea: tarea }">Detalle</button>
+        </td>
+      </tr>
+    }
+  </table>
+} @else {
+  <p>No hay tareas.</p>
+}
+
+<hr>
