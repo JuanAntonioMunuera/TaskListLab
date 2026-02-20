@@ -45,17 +45,17 @@ export class TaskList implements OnInit {
     return this.tareas.length > 0;
   }
 
-  borrar(index: number) {
-    const tarea = this.tareas[index];
-    
-    if (!window.confirm(`Se va a eliminar la tarea: "${tarea.title}"`)) return;
+  borrar(id: number) {
+  const tarea = this.tareas.find(t => t.id === id);
+  if (!tarea) return;
+  
+  if (!window.confirm(`Se va a eliminar la tarea: "${tarea.title}"`)) return;
 
-    this.taskService.borrarTarea(tarea.id).subscribe(() => {
-      //Si la API responde OK, se borra y actualiza la vista
-      this.taskService.eliminarTarea(tarea.id);
-      this.cdr.detectChanges();
-    });
-  }
+  this.taskService.borrarTarea(id).subscribe(() => {
+    this.taskService.eliminarTarea(id);
+    this.cdr.detectChanges();
+  });
+}
 
   getUsuarioNombre(userId: number): string {
     return this.userService.getNombreUsuario(userId);
