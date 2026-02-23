@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, EMPTY } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { User } from '../models/user';
 
 @Injectable({
   providedIn: 'root'
@@ -8,19 +10,20 @@ import { BehaviorSubject } from 'rxjs';
 export class UserService {
   private apiUrl = 'https://jsonplaceholder.typicode.com/users';
 
-  private _usuarios = new BehaviorSubject<any[]>([]);
-  
+  private _usuarios = new BehaviorSubject<User[]>([]);
   public usuarios$ = this._usuarios.asObservable();
 
   constructor(private http: HttpClient) {
-    // Carga de usuarios al iniciar el servicio
-    this.http.get<any[]>(this.apiUrl).subscribe((data) => {
-      this._usuarios.next(data);
-    });
+    this.http.get<User[]>(this.apiUrl).pipe(
+      catchError(err => {
+        console.error('Error al cargar usuarios:', err);
+        return EMPTY;
+      })
+    ).subscribe(data => this._usuarios.next(data));
   }
 
-  getNombreUsuario(userId: number): string {
+  getNombreUsuario(userId: number): string | null {
     const usuario = this._usuarios.getValue().find(u => u.id === userId);
-    return usuario ? usuario.name : `Usuario ${userId}`;
+    return usuario ? usuario.name : null;
   }
 }

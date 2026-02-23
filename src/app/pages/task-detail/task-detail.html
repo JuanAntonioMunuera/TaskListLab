@@ -13,8 +13,8 @@
         <div>
           <label for="userId">Usuario:</label>
           <input type="number" id="userId" [(ngModel)]="tarea.userId" name="userId"
-            (ngModelChange)="nombreUsuario = userService.getNombreUsuario(tarea.userId)" />
-          <p>{{ nombreUsuario }}</p>
+            (ngModelChange)="nombreUsuario = userService.getNombreUsuario(tarea.userId) ?? 'Usuario ' + tarea.userId" />
+          <p>{{ nombreUsuario ?? 'Usuario ' + tarea.userId }}</p>
         </div>
 
         <div>
@@ -30,7 +30,7 @@
     <!-- Vista detalle: /tasks/:id -->
     <div>
       <p><strong>Título:</strong> {{ tarea.title | uppercase }}</p>
-      <p><strong>Usuario:</strong> {{ nombreUsuario }}</p>
+      <p><strong>Usuario:</strong> {{ nombreUsuario ?? 'Usuario ' + tarea.userId }}</p>
       <p><strong>Completada:</strong> {{ tarea.completed | taskStatus }}</p>
 
       <button (click)="irAEditar()">Editar</button>

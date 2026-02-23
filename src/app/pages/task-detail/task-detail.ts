@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task';
 import { UserService } from '../../services/user';
 import { TaskStatusPipe } from '../../pipes/task-status-pipe'; 
+import { Subscription } from 'rxjs';
+import { Task } from '../../models/task';
 
 @Component({
   selector: 'app-task-detail',
@@ -13,10 +15,11 @@ import { TaskStatusPipe } from '../../pipes/task-status-pipe';
   templateUrl: './task-detail.html',
   styleUrls: ['./task-detail.scss']
 })
-export class TaskDetail implements OnInit {
+export class TaskDetail implements OnInit, OnDestroy {
 
-  tarea: any;  
-  nombreUsuario: string = '';
+  private subs = new Subscription();
+
+  tarea: Task | null = null;  nombreUsuario: string | null = null;
   modoEdicion: boolean = false;
 
   constructor(
@@ -28,33 +31,42 @@ export class TaskDetail implements OnInit {
 
   ngOnInit() {    
     this.modoEdicion = this.route.snapshot.url.some(segment => segment.path === 'edit');
-
     const tareaId = +this.route.snapshot.paramMap.get('id')!;
 
-    const tareaEnMemoria = this.taskService._tareas
-      .getValue()
-      .find(t => t.id === tareaId);
+    this.subs.add(
+      this.taskService.tareas$.subscribe(tareas => {
+        const tareaEnMemoria = tareas.find(t => t.id === tareaId);
 
-    if (tareaEnMemoria) {
-      this.tarea = { ...tareaEnMemoria };
-      this.nombreUsuario = this.userService.getNombreUsuario(this.tarea.userId);
-    } else {
-      this.loadTarea(tareaId);
-    }
+        if (tareaEnMemoria) {
+          this.tarea = { ...tareaEnMemoria };
+          this.nombreUsuario = this.userService.getNombreUsuario(this.tarea.userId);
+        } else {
+          this.loadTarea(tareaId);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
   }
 
   irAEditar() {
+    if (!this.tarea) return;
     this.router.navigate(['/tasks', this.tarea.id, 'edit']);
   }
 
   loadTarea(id: number) {
-    this.taskService.getTareaPorId(id).subscribe((data) => {
-      this.tarea = data;
-      this.nombreUsuario = this.userService.getNombreUsuario(this.tarea.userId); // ✅
-    });
+    this.subs.add(
+      this.taskService.getTareaPorId(id).subscribe((data) => {
+        this.tarea = data;
+        this.nombreUsuario = this.userService.getNombreUsuario(this.tarea.userId);
+      })
+  );
   }
 
   guardarTarea() {
+    if (!this.tarea) return;
     const esTareaLocal = this.tarea.id > 200;
 
     if (esTareaLocal) {
@@ -64,7 +76,7 @@ export class TaskDetail implements OnInit {
     } else {
       // Tarea API
       this.taskService.editarTarea(this.tarea.id, this.tarea).subscribe(() => {
-        this.taskService.actualizarTarea(this.tarea);
+        this.taskService.actualizarTarea(this.tarea!);
         this.router.navigate(['/tasks']);
       });
     }
@@ -72,6 +84,7 @@ export class TaskDetail implements OnInit {
 
   volver() {
     if (this.modoEdicion) {
+      if (!this.tarea) return;
       this.router.navigate(['/tasks', this.tarea.id]); 
     } else {
       this.router.navigate(['/tasks']);

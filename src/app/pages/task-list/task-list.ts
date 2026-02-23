@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MarkUserDirective } from '../../directives/mark-user';
@@ -7,13 +7,9 @@ import { TaskService } from '../../services/task';
 import { RouterModule } from '@angular/router';
 import { ChangeDetectorRef } from '@angular/core';
 import { UserService } from '../../services/user';
+import { Subscription } from 'rxjs';
+import { Task } from '../../models/task';
 
-interface Task {
-  id: number;
-  title: string;
-  userId: number;
-  completed: boolean;
-}
 
 @Component({
   selector: 'app-task-list',
@@ -22,7 +18,9 @@ interface Task {
   templateUrl: './task-list.html',
   styleUrls: ['./task-list.scss']
 })
-export class TaskList implements OnInit {
+export class TaskList implements OnInit, OnDestroy {
+
+  private subs = new Subscription();
 
   tareas: Task[] = [];
   filtro: string = 'todas';
@@ -30,15 +28,23 @@ export class TaskList implements OnInit {
   constructor(private taskService: TaskService, private userService: UserService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.taskService.tareas$.subscribe((tareas) => {
-      this.tareas = tareas;
-      this.cdr.detectChanges();
-    });
+    this.subs.add(
+      this.taskService.tareas$.subscribe((tareas) => {
+        this.tareas = tareas;
+        this.cdr.detectChanges();
+      })
+    );
     this.taskService.cargarTareasEnSubject();
 
-    this.userService.usuarios$.subscribe(() => {
-      this.cdr.detectChanges();
-    });
+    this.subs.add(
+      this.userService.usuarios$.subscribe(() => {
+        this.cdr.detectChanges();
+      })
+    );
+  }
+
+  ngOnDestroy() {
+  this.subs.unsubscribe();
   }
 
   hayTareas(): boolean {
@@ -58,12 +64,11 @@ export class TaskList implements OnInit {
 }
 
   getUsuarioNombre(userId: number): string {
-    return this.userService.getNombreUsuario(userId);
+    return this.userService.getNombreUsuario(userId) ?? `Usuario ${userId}`;
   }
 
   tareasFiltradas(): Task[] {
-    if (this.filtro === 'completadas') return this.tareas.filter(t => t.completed);
-    if (this.filtro === 'pendientes') return this.tareas.filter(t => !t.completed);
-    return this.tareas;
+    return this.taskService.getTareasFiltradas(this.tareas, this.filtro);
   }
+
 }

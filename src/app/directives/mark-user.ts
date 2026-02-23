@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
 
 @Directive({
   selector: '[mark-user]',
@@ -7,12 +7,12 @@ import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular
 export class MarkUserDirective implements OnChanges {
   @Input('mark-user') nombreUsuario: string = '';
 
-  constructor(private el: ElementRef) {}
+  constructor(private el: ElementRef, private renderer: Renderer2) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.nombreUsuario) {
-      this.el.nativeElement.style.backgroundColor = '';
-      this.el.nativeElement.style.fontWeight = '';
+      this.renderer.removeStyle(this.el.nativeElement, 'background-color');
+      this.renderer.removeStyle(this.el.nativeElement, 'font-weight');
       return;
     }
 
@@ -20,11 +20,11 @@ export class MarkUserDirective implements OnChanges {
     const vocales = ['A', 'E', 'I', 'O', 'U'];
 
     if (vocales.includes(primeraLetra)) {
-      this.el.nativeElement.style.backgroundColor = 'yellow';
-      this.el.nativeElement.style.fontWeight = 'bold';
+      this.renderer.setStyle(this.el.nativeElement, 'background-color', 'yellow');
+      this.renderer.setStyle(this.el.nativeElement, 'font-weight', 'bold');
     } else {
-      this.el.nativeElement.style.backgroundColor = '';
-      this.el.nativeElement.style.fontWeight = '';
+      this.renderer.removeStyle(this.el.nativeElement, 'background-color');
+      this.renderer.removeStyle(this.el.nativeElement, 'font-weight');
     }
   }
 }
